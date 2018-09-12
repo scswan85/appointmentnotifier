@@ -55,4 +55,3 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'bootstrap', '~> 4.1', '>= 4.1.3'
 gem 'twilio-ruby', '~> 5.12', '>= 5.12.4'
-gem 'datetime_picker_rails', '~> 0.0.7'
