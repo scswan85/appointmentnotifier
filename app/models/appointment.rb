@@ -3,25 +3,48 @@ class Appointment < ApplicationRecord
   validates :phone_number, presence: true
   validates :time, presence: true
 
-  after_create :reminder
+  after_create :new_reminder
+  after_update :update_reminder
+  after_destroy :destroy_reminder
 
-  def reminder
-    @twilio_number = Rails.application.credentials.twilio_number
+  def new_reminder
+    twilio_number = Rails.application.credentials.twilio_number
     account_sid = Rails.application.credentials.twilio_sid
-    @client = Twilio::Rest::Client.net account_sid, Rails.application.credentials.twilio_auth
+    client = Twilio::REST::Client.new account_sid, Rails.application.credentials.twilio_auth
     time_str = ((self.time).localtime).strftime("%I:%M%p on %b. %d %Y")
     reminder = "#{self.name}, this is a reminder of your appointment at #{time_str}."
-    message = @client.api.account(account_sid).messages.create(
-      from: @twilio_number,
+    message = client.messages.create(
+      from: twilio_number,
       to: self.phone_number,
       body: reminder,
       )
   end
 
-  def when_to_run
-    minutes_before_appointment = 30.minutes
-    time - minutes_before_appointment
+
+  def update_reminder
+    twilio_number = Rails.application.credentials.twilio_number
+    account_sid = Rails.application.credentials.twilio_sid
+    client = Twilio::REST::Client.new account_sid, Rails.application.credentials.twilio_auth
+    time_str = ((self.time).localtime).strftime("%I:%M%p on %b. %d %Y")
+    reminder = "#{self.name}, this is to let you know your appointment was updated to #{time_str}. If you believe this was done in error, please contact us at ###-###-####."
+    message = client.messages.create(
+      from: twilio_number,
+      to: self.phone_number,
+      body: reminder,
+      )
   end
-    
-  handle_asynchronously :reminder, run_at: Proc.new { |i| i.when_to_run }
+
+  
+  def destroy_reminder
+    twilio_number = Rails.application.credentials.twilio_number
+    account_sid = Rails.application.credentials.twilio_sid
+    client = Twilio::REST::Client.new account_sid, Rails.application.credentials.twilio_auth
+    time_str = ((self.time).localtime).strftime("%I:%M%p on %b. %d %Y")
+    reminder = "#{self.name}, this is to let you know your appointment on #{time_str} has been cancelled. If you believe this was done in error, please contact us at ###-###-####."
+    message = client.messages.create(
+      from: twilio_number,
+      to: self.phone_number,
+      body: reminder,
+      )
+  end
 end
